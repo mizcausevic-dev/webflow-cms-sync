@@ -1,0 +1,11 @@
+{
+  "name": "webflow-cms-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sync JSON/CSV content into Webflow CMS via the Data API v2.",
+  "type": "module",
+  "license": "MIT",
+  "bin": { "webflow-cms-sync": "bin/webflow-cms-sync.mjs" },
+  "scripts": { "test": "node --test", "start": "python3 -m http.server 8080" },
+  "engines": { "node": ">=20" }
+}

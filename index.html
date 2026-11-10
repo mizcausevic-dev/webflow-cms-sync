@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Webflow CMS Sync: plan a CSV import before it touches your site</title>
+  <meta name="description" content="Validate CSV/JSON against a Webflow collection schema and preview exactly which Data API v2 requests a sync would send. Runs locally; no token needed for the playground.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%230b0c10%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%276%27 fill=%27%235b8cff%27/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="./"><span class="dot" aria-hidden="true"></span>Webflow CMS Sync</a>
+  <nav><a href="#cli">CLI</a><a href="https://github.com/mizcausevic-dev/webflow-cms-sync">GitHub</a></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Webflow Data API v2 · CMS automation</div>
+    <h1>Import content into Webflow CMS without surprises.</h1>
+    <p>Paste a collection schema, your CSV, and what's already in the collection. The planner checks every row against the field types, matches items by slug, and shows exactly which batched API requests a sync would send. This playground runs entirely in your browser and needs no API token.</p>
+  </section>
+
+  <div class="grid cols-2">
+    <section class="card">
+      <div class="tabs" role="tablist" aria-label="Inputs">
+        <button type="button" role="tab" aria-selected="true" aria-controls="csv" data-tab="csv">Source CSV</button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="schema" data-tab="schema">Collection schema</button>
+        <button type="button" role="tab" aria-selected="false" aria-controls="existing" data-tab="existing">Existing items</button>
+      </div>
+      <textarea id="csv" rows="16" spellcheck="false" aria-label="Source CSV"></textarea>
+      <textarea id="schema" rows="16" spellcheck="false" aria-label="Collection schema JSON" hidden></textarea>
+      <textarea id="existing" rows="16" spellcheck="false" aria-label="Existing items JSON" hidden></textarea>
+      <p class="hint">The schema has the same shape as <code>GET /v2/collections/{id}</code>. Existing items use the shape of <code>GET /v2/collections/{id}/items</code> → <code>items</code>.</p>
+      <div class="error-box" id="err" role="alert"></div>
+    </section>
+
+    <div class="stack">
+      <div class="grid cols-4" id="tiles" aria-live="polite"></div>
+      <section class="card">
+        <h2>Plan</h2>
+        <div class="table-scroll"><table id="plan"><thead><tr><th>Row</th><th>Action</th><th>Slug</th><th>Details</th></tr></thead><tbody></tbody></table></div>
+      </section>
+      <section class="card">
+        <h2>Requests a real sync would send <small>batched at 100 items per request</small></h2>
+        <pre class="code" id="requests"></pre>
+      </section>
+    </div>
+  </div>
+
+  <section class="card mt-16" id="cli">
+    <h2>Run it against your site</h2>
+    <pre class="code">export WEBFLOW_TOKEN=…            # site token with CMS read/write scopes
+node bin/webflow-cms-sync.mjs --collection &lt;collectionId&gt; --file case-studies.csv            # dry run
+node bin/webflow-cms-sync.mjs --collection &lt;collectionId&gt; --file case-studies.csv --apply --publish</pre>
+    <p class="hint">It's a dry run by default. Invalid rows never reach the API, and items that exist only in Webflow are reported but never deleted. On a 429 the CLI waits as long as <code>Retry-After</code> says, and it slows down when <code>X-RateLimit-Remaining</code> runs low.</p>
+  </section>
+</main>
+
+<footer class="site"><div class="wrap">
+  <span>Built by <a href="https://github.com/mizcausevic-dev">Miz Causevic</a> · Kinetic Gain LLC</span>
+  <span>Independent project, not affiliated with or endorsed by Webflow, Inc. · MIT licensed</span>
+</div></footer>
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

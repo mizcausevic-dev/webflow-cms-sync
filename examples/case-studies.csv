@@ -1,0 +1,6 @@
+name,client,industry,conversion-lift,featured,published-on,live-url
+Checkout Redesign,Northwind Pay,Fintech,18.5,true,2026-03-02,https://example.com/northwind
+Patient Portal Migration,Harbor Health,Healthcare,9,false,2026-04-17,https://example.com/harbor
+"Pricing Page, Rebuilt",Acme Analytics,SaaS,12,yes,2026-06-30,https://example.com/acme
+Webinar Funnel,Globex,Retail,7,no,2026-07-08,https://example.com/globex
+Docs Hub,Initech,SaaS,not-a-number,false,2026-08-11,ftp://example.com/initech
