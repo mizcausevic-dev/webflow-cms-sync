@@ -20,8 +20,8 @@ CMS imports are where Webflow projects go wrong. The usual failures are a misspe
 | Schema-aware validation | Coerces and checks `PlainText` (maxLength), `Number`, `Switch`, `DateTime`, `Email`, `Link`, `Color`, `Option` (by name or id), `Image`, plus required fields and unknown columns |
 | Diff by slug | Splits rows into create / update (only the changed fields) / unchanged / invalid / duplicate. Items only in Webflow are reported and never deleted |
 | Batched writes | `POST /items/insert` and `PATCH /items` at the documented 100-item limit, then optional `POST /items/publish` |
-| Rate-limit handling | On `429` and `5xx` it waits for `Retry-After` (exponential backoff when absent), and slows down when `X-RateLimit-Remaining` runs low |
-| Idempotent | Running the same file again produces zero writes (covered by a test) |
+| Rate-limit handling | On `429` it waits for `Retry-After` (exponential backoff when absent), and slows down when `X-RateLimit-Remaining` runs low. A `5xx` is retried only for idempotent requests: a failed `POST` may already have been written, so it's reported instead of resent, and re-running is safe because items match by slug |
+| Idempotent | Running the same file again produces zero writes, including fields Webflow returns in a different shape (dates without milliseconds, images as `{ fileId, url, alt }`) |
 | Safe by default | Dry run unless `--apply`. The token comes only from the environment. IDs are validated before they're used in URL paths |
 
 ## Usage
@@ -73,7 +73,7 @@ Paths and limits follow the [Webflow Data API v2 reference](https://developers.w
 
 ## Verification status
 
-- **Tested:** 14 unit and integration tests against an in-memory fake of the API. They cover validation, the diff, 100-item batching (250 items → 3 requests), publish, idempotent re-runs, 429 retries honoring `Retry-After`, give-up after max retries, and auth errors.
+- **Tested:** 16 unit and integration tests against an in-memory fake of the API. They cover validation, the diff, 100-item batching (250 items → 3 requests), publish, idempotent re-runs, 429 retries honoring `Retry-After`, no blind retry of a `POST` that failed with a 5xx (no duplicates), shape-tolerant comparison, give-up after max retries, and auth errors.
 - **Not yet tested:** a run against a live Webflow site. That needs a site token, and none was used for this repo. Bulk-locale (`cmsLocaleIds`) writes aren't implemented.
 
 ## Run locally

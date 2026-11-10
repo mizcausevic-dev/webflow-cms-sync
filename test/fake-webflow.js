@@ -2,7 +2,7 @@
 let seq = 0;
 const newId = () => (0xabc000000000 + ++seq).toString(16).padStart(24, '0');
 
-export function fakeWebflow({ collection, items = [], rateLimitEvery = 0 }) {
+export function fakeWebflow({ collection, items = [], rateLimitEvery = 0, failInsertOnce = false }) {
   const store = new Map(items.map((i) => [i.id, structuredClone(i)]));
   const log = [];
   let calls = 0;
@@ -23,6 +23,11 @@ export function fakeWebflow({ collection, items = [], rateLimitEvery = 0 }) {
       if (limit > 100) return json(400, { code: 'validation_error', message: 'limit > 100' });
       const all = [...store.values()];
       return json(200, { items: all.slice(offset, offset + limit), pagination: { limit, offset, total: all.length } });
+    }
+    if (method === 'POST' && u.pathname === `${base}/items/insert` && failInsertOnce) {
+      failInsertOnce = false;
+      body.items.forEach((e) => { const it = { id: newId(), fieldData: e.fieldData, isDraft: true, isArchived: false }; store.set(it.id, it); });
+      return json(502, { code: 'internal_error', message: 'gateway timeout after write' }); // applied, but the client cannot know
     }
     if (method === 'POST' && u.pathname === `${base}/items/insert`) {
       if (body.items.length > 100) return json(400, { code: 'batch_too_large', message: '> 100' });

@@ -120,3 +120,25 @@ test('CLI: refuses to run without a token and validates flags', async () => {
   assert.match(noToken.stderr.toString(), /token is required/);
   assert.equal(spawnSync(process.execPath, [cli, '--publish', '--collection', 'x', '--file', 'y'], { env }).status, 2);
 });
+
+test('a 5xx on POST is not retried (the write may already have happened), so no duplicates', async () => {
+  const fake = fakeWebflow({ collection, failInsertOnce: true });
+  const records = [{ name: 'Only Once', client: 'X' }];
+  await assert.rejects(() => sync(client(fake), { collectionId: collection.id, records, dryRun: false }), (e) => e.status === 502);
+  assert.equal(fake.store.size, 1);
+  const again = await sync(client(fake), { collectionId: collection.id, records, dryRun: false });
+  assert.equal(again.created.length, 0, 're-running is safe: the slug already exists');
+  assert.equal(fake.store.size, 1);
+});
+
+test('values Webflow returns in a different shape are not reported as changes', () => {
+  const fields = [
+    { slug: 'name', type: 'PlainText', isRequired: true }, { slug: 'slug', type: 'PlainText', isRequired: true },
+    { slug: 'when', type: 'DateTime' }, { slug: 'hero', type: 'Image' },
+  ];
+  const existing = [{ id: 'd'.repeat(24), fieldData: { name: 'A', slug: 'a', when: '2026-03-02T00:00:00Z', hero: { fileId: 'f1', url: 'https://cdn.example.com/a.jpg', alt: null } } }];
+  const plan = buildPlan({ records: [{ name: 'A', when: '2026-03-02', hero: 'https://cdn.example.com/a.jpg' }], existing, fields });
+  assert.equal(plan.summary.unchanged, 1);
+  const changed = buildPlan({ records: [{ name: 'A', when: '2026-03-03', hero: 'https://cdn.example.com/a.jpg' }], existing, fields });
+  assert.deepEqual(changed.update[0].changed, ['when']);
+});

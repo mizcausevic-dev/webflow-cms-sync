@@ -51,7 +51,11 @@ export class WebflowClient {
         body: body ? JSON.stringify(body) : undefined,
       });
       const remaining = Number(res.headers.get('x-ratelimit-remaining'));
-      if (res.status === 429 || res.status >= 500) {
+      // 429 means the request was rejected before processing, so any method is safe to resend.
+      // A 5xx on POST may have been applied server-side; resending /items/insert could create duplicates,
+      // so only idempotent methods (GET, PATCH with explicit ids) are retried on 5xx.
+      const retryable = res.status === 429 || (res.status >= 500 && method !== 'POST');
+      if (retryable) {
         if (attempt >= this.maxRetries) throw new WebflowApiError(res.status, await safeJson(res), path);
         const retryAfter = Number(res.headers.get('retry-after'));
         const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : Math.min(60000, 1000 * 2 ** attempt);
