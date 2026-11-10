@@ -7,7 +7,13 @@
 
 **Live playground: https://mizcausevic-dev.github.io/webflow-cms-sync/**
 
+[![Webflow CMS Sync](docs/social-card.png)](https://mizcausevic-dev.github.io/webflow-cms-sync/)
+
 A CLI and library that sync CSV or JSON content into a Webflow CMS collection through the **Webflow Data API v2**. It checks every row against the collection's field schema, matches items by slug, writes only what changed in batches of 100, respects rate limits, and can publish at the end. It runs as a dry run by default.
+
+## See it in action
+
+![Recording of the live demo](docs/demo.gif)
 
 ## The problem it solves
 
